@@ -8,7 +8,21 @@ def pair(pair: int, left_motor: int, right_motor: int) -> None:
         left_motor: Port number for the left motor
         right_motor: Port number for the right motor
     """
-    pass
+    # simple in-memory registry of defined pairs
+    try:
+        _PAIRS
+    except NameError:
+        _PAIRS: dict[int, tuple[int, int]] = {}
+        globals()["_PAIRS"] = _PAIRS
+
+    if not isinstance(pair, int):
+        raise TypeError("pair must be an int")
+    if not isinstance(left_motor, int) or not isinstance(right_motor, int):
+        raise TypeError("left_motor and right_motor must be ints")
+    if left_motor == right_motor:
+        raise ValueError("left_motor and right_motor must be different ports")
+
+    _PAIRS[pair] = (left_motor, right_motor)
 
 
 def move(pair: int, steering: int, *, velocity: int = 360, acceleration: int = 1000) -> None:
