@@ -1,1 +1,0 @@
-"""LEGO Spike Robot Emulator"""
