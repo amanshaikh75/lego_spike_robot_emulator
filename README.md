@@ -1,1 +1,1 @@
-# Lego Spike robot emulator
+# Lego Spike robot simulator
