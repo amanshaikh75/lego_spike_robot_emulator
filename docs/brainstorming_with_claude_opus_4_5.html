@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEGO Spike Prime Simulator - Brainstorming Session</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .nav-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+    
+    .nav-controls button {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    
+    .nav-controls button:hover {
+      background: #0369a1;
+    }
+    
+    .nav-controls span {
+      color: #475569;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+    
+    .slide {
+      width: 960px;
+      height: 540px;
+      background: #ffffff;
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+      display: none;
+      flex-direction: column;
+    }
+    
+    .slide.active {
+      display: flex;
+    }
+    
+    .accent-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      background: linear-gradient(180deg, #0284c7 0%, #0891b2 100%);
+    }
+    
+    .slide-number {
+      position: absolute;
+      bottom: 20px;
+      right: 40px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    
+    h1 {
+      font-size: 36px;
+      color: #1e293b;
+      font-weight: 700;
+    }
+    
+    .title-zone {
+      padding: 28px 20px 0 40px;
+    }
+    
+    .content-zone {
+      flex: 1;
+      padding: 20px 40px;
+      display: flex;
+      gap: 24px;
+    }
+    
+    .label {
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .label.blue { color: #0284c7; }
+    .label.teal { color: #0891b2; }
+    
+    .card {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .card.bordered {
+      border-left: 4px solid #0284c7;
+    }
+    
+    .card.bordered-teal {
+      border-left: 4px solid #0891b2;
+    }
+    
+    .card.gradient {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    }
+    
+    .card p {
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    .text-white { color: #ffffff; }
+    .text-dark { color: #1e293b; }
+    .text-medium { color: #475569; }
+    .text-muted { color: #64748b; }
+    .text-blue { color: #0284c7; }
+    .text-teal { color: #0891b2; }
+    
+    .text-sm { font-size: 12px; }
+    .text-md { font-size: 14px; }
+    .text-lg { font-size: 16px; }
+    .text-xl { font-size: 18px; }
+    .text-2xl { font-size: 22px; }
+    
+    .font-bold { font-weight: 600; }
+    .font-mono { font-family: monospace; }
+    
+    .row { display: flex; flex-direction: row; }
+    .col { display: flex; flex-direction: column; }
+    .gap-sm { gap: 8px; }
+    .gap-md { gap: 12px; }
+    .gap-lg { gap: 16px; }
+    .gap-xl { gap: 24px; }
+    
+    .flex-1 { flex: 1; }
+    .items-center { align-items: center; }
+    .items-stretch { align-items: stretch; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .text-center { text-align: center; }
+    
+    ul {
+      padding-left: 20px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    
+    .phase-box {
+      background: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 20px;
+      text-align: center;
+    }
+    
+    .phase-box.active {
+      border: 2px solid #0284c7;
+      background: #f0f9ff;
+    }
+    
+    .milestone-card {
+      flex: 1;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 14px;
+      border-top: 4px solid;
+      border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .divider {
+      width: 1px;
+      background: #cbd5e1;
+    }
+    
+    .code-block {
+      background: #1e293b;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    
+    .tag {
+      background: #e0f2fe;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #0369a1;
+    }
+    
+    .summary-row {
+      display: flex;
+      gap: 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 10px 12px;
+      align-items: center;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .summary-num {
+      width: 36px;
+      font-size: 13px;
+      color: #0284c7;
+      font-weight: 700;
+    }
+    
+    .summary-q {
+      flex: 2;
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    .summary-a {
+      flex: 3;
+      font-size: 13px;
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    /* Title slide specific */
+    .title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .title-slide h1 {
+      font-size: 48px;
+      line-height: 1.2;
+      color: #1e293b;
+    }
+    
+    .title-slide .subtitle {
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: #0284c7;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    
+    .title-slide .tagline {
+      font-size: 18px;
+      color: #64748b;
+      margin-top: 16px;
+    }
+    
+    .title-slide .footer {
+      position: absolute;
+      bottom: 24px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 1000px) {
+      .slide {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        transform: scale(0.9);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide active title-slide" id="slide1">
+  <div class="accent-bar"></div>
+  <div class="subtitle">Project Brainstorming Session</div>
+  <h1>Building a LEGO Spike Prime<br>Robot Simulator</h1>
+  <div class="tagline">A Collaborative Design Journey with Claude</div>
+  <div class="footer">
+    <span>Web-Based Simulator • Vue.js + Pyodide</span>
+    <span>January 2026</span>
+  </div>
+</div>
+
+<!-- Slide 2: Question 1 -->
+<div class="slide" id="slide2">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Question 1: What's the Primary Purpose?</h1>
+  </div>
+  <div class="content-zone">
+    <div class="col gap-lg" style="width: 45%;">
+      <div class="label blue">Claude Asked</div>
+      <div class="card bordered">
+        <p class="text-md text-dark" style="margin-bottom: 12px;">What's the primary purpose? Are you thinking of this as:</p>
+        <ul>
+          <li>An educational tool for learning programming?</li>
+          <li>A way to test code before deploying?</li>
+          <li>A game or interactive experience?</li>
+          <li>Something else?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col gap-lg" style="width: 55%;">
+      <div class="label teal">User Answered</div>
+      <div class="card gradient">
+        <p class="text-2xl text-white font-bold">"A way to test code before deploying to a real Spike robot."</p>
+      </div>
+      <div class="card" style="margin-top: 8px;">
+        <p class="text-sm text-medium"><span class="text-teal font-bold">Key Insight:</span> This shapes everything — we need exact API compatibility, not simplified abstractions.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">2</div>
+</div>
+
+<!-- Slide 3: Questions 2 & 3 -->
+<div class="slide" id="slide3">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Questions 2 & 3: Target System & Fidelity</h1>
+  </div>
+  <div class="content-zone col gap-lg">
+    <div class="row gap-xl items-stretch">
+      <div class="card bordered flex-1">
+        <p class="text-sm text-blue font-bold" style="letter-spacing: 1px; margin-bottom: 8px;">Q2: WHICH SPIKE SYSTEM?</p>
+        <p class="text-md text-medium">Spike Prime or Spike Essential?</p>
+      </div>
+      <div class="card gradient flex-1 row items-center" style="flex: 1.5;">
+        <p class="text-xl text-white font-bold">→ Spike Prime</p>
+      </div>
+    </div>
+    <div class="row gap-xl items-stretch">
+      <div class="card bordered flex-1">
+        <p class="text-sm text-blue font-bold" style="letter-spacing: 1px; margin-bottom: 8px;">Q3: WHAT LEVEL OF FIDELITY?</p>
+        <p class="text-md text-medium">Logic only? Visual 2D/3D? Physics?</p>
+      </div>
+      <div class="card gradient flex-1" style="flex: 1.5;">
+        <p class="text-xl text-white font-bold">→ Incremental approach</p>
+      </div>
+    </div>
+    <div class="row gap-md justify-center" style="margin-top: 12px;">
+      <div class="phase-box active">
+        <p class="text-sm text-blue font-bold">PHASE 1</p>
+        <p class="text-md text-dark" style="margin-top: 4px;">Logic Simulation</p>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="phase-box">
+        <p class="text-sm text-muted font-bold">PHASE 2</p>
+        <p class="text-md text-medium" style="margin-top: 4px;">2D Visualization</p>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="phase-box">
+        <p class="text-sm text-muted font-bold">PHASE 3</p>
+        <p class="text-md text-medium" style="margin-top: 4px;">3D Visualization</p>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="phase-box">
+        <p class="text-sm text-muted font-bold">PHASE 4</p>
+        <p class="text-md text-medium" style="margin-top: 4px;">Physics Engine</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">3</div>
+</div>
+
+<!-- Slide 4: Questions 4, 5, 6 -->
+<div class="slide" id="slide4">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Questions 4, 5 & 6: Tech Stack</h1>
+  </div>
+  <div class="content-zone col gap-lg">
+    <div class="row gap-lg items-stretch">
+      <div class="col gap-md flex-1">
+        <div class="card bordered">
+          <p class="text-sm text-blue font-bold" style="letter-spacing: 1px; margin-bottom: 6px;">Q4: PROGRAMMING ENVIRONMENT?</p>
+          <p class="text-sm text-medium">Block-based, Python, or both?</p>
+        </div>
+        <div class="card gradient text-center">
+          <p class="text-xl text-white font-bold">Python</p>
+        </div>
+      </div>
+      <div class="col gap-md flex-1">
+        <div class="card bordered">
+          <p class="text-sm text-blue font-bold" style="letter-spacing: 1px; margin-bottom: 6px;">Q5: PREFERRED TOOLS?</p>
+          <p class="text-sm text-medium">Web-based, desktop, or IDE?</p>
+        </div>
+        <div class="card gradient text-center">
+          <p class="text-xl text-white font-bold">Web-Based</p>
+        </div>
+      </div>
+      <div class="col gap-md flex-1">
+        <div class="card bordered">
+          <p class="text-sm text-blue font-bold" style="letter-spacing: 1px; margin-bottom: 6px;">Q6: INTENDED USE?</p>
+          <p class="text-sm text-medium">Personal, classroom, public?</p>
+        </div>
+        <div class="card gradient text-center">
+          <p class="text-xl text-white font-bold">Personal + GitHub</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label teal">Resulting Tech Stack</p>
+      <div class="row gap-xl">
+        <div class="col gap-sm flex-1">
+          <p class="text-sm text-muted" style="text-transform: uppercase;">Frontend</p>
+          <p class="text-lg text-dark font-bold">Vue.js</p>
+          <p class="text-sm text-medium">Low learning curve</p>
+        </div>
+        <div class="divider"></div>
+        <div class="col gap-sm flex-1">
+          <p class="text-sm text-muted" style="text-transform: uppercase;">Python Runtime</p>
+          <p class="text-lg text-dark font-bold">Pyodide</p>
+          <p class="text-sm text-medium">Python in WebAssembly</p>
+        </div>
+        <div class="divider"></div>
+        <div class="col gap-sm flex-1">
+          <p class="text-sm text-muted" style="text-transform: uppercase;">Code Input</p>
+          <p class="text-lg text-dark font-bold">Paste / Upload</p>
+          <p class="text-sm text-medium">Editor added later</p>
+        </div>
+        <div class="divider"></div>
+        <div class="col gap-sm flex-1">
+          <p class="text-sm text-muted" style="text-transform: uppercase;">Timeline</p>
+          <p class="text-lg text-dark font-bold">Weekend Project</p>
+          <p class="text-sm text-medium">No fixed deadline</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">4</div>
+</div>
+
+<!-- Slide 5: Components & API -->
+<div class="slide" id="slide5">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Deep Dive: Components & API Strategy</h1>
+  </div>
+  <div class="content-zone">
+    <div class="col gap-md" style="flex: 1;">
+      <p class="label blue">Q7: Component Priority?</p>
+      <div class="card bordered-teal">
+        <p class="text-sm text-teal font-bold">PRIORITY 1</p>
+        <p class="text-md text-dark" style="margin-top: 4px;">Drive Motors (wheels) + IMU</p>
+      </div>
+      <div class="card" style="opacity: 0.7;">
+        <p class="text-sm text-muted font-bold">PRIORITY 2</p>
+        <p class="text-md text-medium" style="margin-top: 4px;">Arm Motors</p>
+      </div>
+      <div class="card" style="opacity: 0.5;">
+        <p class="text-sm text-muted font-bold">PRIORITY 3</p>
+        <p class="text-md text-muted" style="margin-top: 4px;">Sensors & Hub Features</p>
+      </div>
+    </div>
+    <div class="col gap-md" style="flex: 1.2;">
+      <p class="label blue">Q8: API Compatibility Level?</p>
+      <div class="card gradient">
+        <p class="text-xl text-white font-bold">"Exact compatibility — code runs unchanged on real hardware."</p>
+      </div>
+      <div class="card">
+        <p class="text-sm text-muted" style="text-transform: uppercase; margin-bottom: 6px;">Reference Documentation</p>
+        <p class="text-sm text-blue font-mono">tuftsceeo.github.io/SPIKEPythonDocs</p>
+      </div>
+      <p class="label blue" style="margin-top: 8px;">Q9: Time Handling?</p>
+      <div class="row gap-sm items-center">
+        <div class="phase-box active" style="padding: 10px 14px;">
+          <p class="text-sm text-dark font-bold">Real-time</p>
+        </div>
+        <p class="text-muted">→</p>
+        <div class="phase-box" style="padding: 10px 14px;">
+          <p class="text-sm text-medium">Configurable</p>
+        </div>
+        <p class="text-muted">→</p>
+        <div class="phase-box" style="padding: 10px 14px;">
+          <p class="text-sm text-medium">Step Debug</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">5</div>
+</div>
+
+<!-- Slide 6: State & Configuration -->
+<div class="slide" id="slide6">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Final Details: State & Configuration</h1>
+  </div>
+  <div class="content-zone">
+    <div class="col gap-lg" style="flex: 1;">
+      <p class="label blue">Q10: How to Observe Robot State?</p>
+      <div class="card bordered-teal">
+        <p class="text-md text-dark font-bold">✓ Console / Log Output</p>
+        <p class="text-sm text-medium" style="margin-top: 4px;">"Motor A running at 50% speed"</p>
+      </div>
+      <div class="card bordered-teal">
+        <p class="text-md text-dark font-bold">✓ Dashboard Panel</p>
+        <p class="text-sm text-medium" style="margin-top: 4px;">Visual display of current values</p>
+      </div>
+      <p class="label blue" style="margin-top: 8px;">Q11: IMU Simulation?</p>
+      <div class="card gradient">
+        <p class="text-md text-white font-bold">Calculate from motor movements</p>
+        <p class="text-sm" style="color: rgba(255,255,255,0.8); margin-top: 4px;">Differential wheel motion → yaw change</p>
+      </div>
+    </div>
+    <div class="col gap-lg" style="flex: 1.1;">
+      <p class="label blue">Q12 & Q13: Robot Configuration</p>
+      <div class="card">
+        <p class="text-sm text-muted" style="margin-bottom: 8px;">config.json</p>
+        <div class="code-block">
+          <p>"wheelDiameterMm": 56,</p>
+          <p>"axleTrackMm": 112,</p>
+          <p>"leftMotorPort": "A",</p>
+          <p>"rightMotorPort": "B"</p>
+        </div>
+      </div>
+      <div class="card">
+        <p class="text-md text-teal font-bold" style="margin-bottom: 6px;">Why text-based config?</p>
+        <ul style="font-size: 12px; line-height: 1.7;">
+          <li>Easy to version control</li>
+          <li>Share robot profiles</li>
+          <li>No UI complexity for MVP</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">6</div>
+</div>
+
+<!-- Slide 7: Phase 1 Milestones -->
+<div class="slide" id="slide7">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Phase 1: Incremental Build Plan</h1>
+  </div>
+  <div class="content-zone col gap-md">
+    <div class="row gap-md items-stretch">
+      <div class="milestone-card" style="border-color: #0284c7;">
+        <p class="text-sm font-bold" style="color: #0284c7; letter-spacing: 1px;">MILESTONE 1.1</p>
+        <p class="text-md text-dark font-bold" style="margin-top: 6px;">Project Setup</p>
+        <p class="text-sm text-medium" style="margin-top: 8px; line-height: 1.5;">Vue + Vite + Pyodide<br>Basic motor.run()<br>Console output</p>
+      </div>
+      <div class="milestone-card" style="border-color: #0369a1;">
+        <p class="text-sm font-bold" style="color: #0369a1; letter-spacing: 1px;">MILESTONE 1.2</p>
+        <p class="text-md text-dark font-bold" style="margin-top: 6px;">Async Support</p>
+        <p class="text-sm text-medium" style="margin-top: 8px; line-height: 1.5;">runloop module<br>run_for_degrees()<br>run_for_time()</p>
+      </div>
+      <div class="milestone-card" style="border-color: #0891b2;">
+        <p class="text-sm font-bold" style="color: #0891b2; letter-spacing: 1px;">MILESTONE 1.3</p>
+        <p class="text-md text-dark font-bold" style="margin-top: 6px;">Motor Pair</p>
+        <p class="text-sm text-medium" style="margin-top: 8px; line-height: 1.5;">Synchronized motors<br>Drivebase control<br>Tank movements</p>
+      </div>
+      <div class="milestone-card" style="border-color: #06b6d4;">
+        <p class="text-sm font-bold" style="color: #06b6d4; letter-spacing: 1px;">MILESTONE 1.4</p>
+        <p class="text-md text-dark font-bold" style="margin-top: 6px;">IMU Sensor</p>
+        <p class="text-sm text-medium" style="margin-top: 8px; line-height: 1.5;">motion_sensor<br>Yaw from wheels<br>Config parser</p>
+      </div>
+      <div class="milestone-card" style="border-color: #22d3ee;">
+        <p class="text-sm font-bold" style="color: #22d3ee; letter-spacing: 1px;">MILESTONE 1.5</p>
+        <p class="text-md text-dark font-bold" style="margin-top: 6px;">Dashboard</p>
+        <p class="text-sm text-medium" style="margin-top: 8px; line-height: 1.5;">State visualization<br>Error handling<br>Documentation</p>
+      </div>
+    </div>
+    <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+      <p class="text-md text-dark"><span class="text-teal font-bold">BUILD APPROACH:</span> Start simple, validate each step, then add complexity. Each milestone produces working software.</p>
+    </div>
+    <div class="card">
+      <p class="text-sm text-muted" style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Core Modules to Implement</p>
+      <div class="row gap-md" style="flex-wrap: wrap;">
+        <span class="tag">motor</span>
+        <span class="tag">motor_pair</span>
+        <span class="tag">runloop</span>
+        <span class="tag">hub.port</span>
+        <span class="tag">hub.motion_sensor</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">7</div>
+</div>
+
+<!-- Slide 8: Workflow -->
+<div class="slide" id="slide8">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Development Workflow with Claude</h1>
+  </div>
+  <div class="content-zone col gap-xl">
+    <div class="row gap-lg items-stretch">
+      <div class="col flex-1" style="gap: 0;">
+        <div style="background: #0284c7; border-radius: 8px 8px 0 0; padding: 12px; text-align: center;">
+          <p class="text-2xl font-bold text-white">1</p>
+        </div>
+        <div class="card" style="border-radius: 0 0 8px 8px; flex: 1;">
+          <p class="text-md text-dark font-bold">Plan & Discuss</p>
+          <p class="text-sm text-medium" style="margin-top: 6px;">Use this chat for brainstorming and architecture decisions</p>
+        </div>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="col flex-1" style="gap: 0;">
+        <div style="background: #0369a1; border-radius: 8px 8px 0 0; padding: 12px; text-align: center;">
+          <p class="text-2xl font-bold text-white">2</p>
+        </div>
+        <div class="card" style="border-radius: 0 0 8px 8px; flex: 1;">
+          <p class="text-md text-dark font-bold">Implement</p>
+          <p class="text-sm text-medium" style="margin-top: 6px;">Switch to Claude's "Code" feature connected to GitHub</p>
+        </div>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="col flex-1" style="gap: 0;">
+        <div style="background: #0891b2; border-radius: 8px 8px 0 0; padding: 12px; text-align: center;">
+          <p class="text-2xl font-bold text-white">3</p>
+        </div>
+        <div class="card" style="border-radius: 0 0 8px 8px; flex: 1;">
+          <p class="text-md text-dark font-bold">Review & Merge</p>
+          <p class="text-sm text-medium" style="margin-top: 6px;">Code agent creates PRs, you review and merge</p>
+        </div>
+      </div>
+      <p class="text-muted text-2xl" style="align-self: center;">→</p>
+      <div class="col flex-1" style="gap: 0;">
+        <div style="background: #06b6d4; border-radius: 8px 8px 0 0; padding: 12px; text-align: center;">
+          <p class="text-2xl font-bold text-white">4</p>
+        </div>
+        <div class="card" style="border-radius: 0 0 8px 8px; flex: 1;">
+          <p class="text-md text-dark font-bold">Iterate</p>
+          <p class="text-sm text-medium" style="margin-top: 6px;">Return here to discuss issues and plan next milestone</p>
+        </div>
+      </div>
+    </div>
+    <div class="row gap-lg">
+      <div class="card bordered flex-1">
+        <p class="text-sm text-blue font-bold" style="text-transform: uppercase; letter-spacing: 1px;">Key Artifact</p>
+        <p class="text-lg text-dark font-bold" style="margin-top: 6px;">PROJECT_PLAN.md</p>
+        <p class="text-sm text-medium" style="margin-top: 4px;">Single source of truth — milestones, API checklists, file structure</p>
+      </div>
+      <div class="card bordered-teal flex-1">
+        <p class="text-sm text-teal font-bold" style="text-transform: uppercase; letter-spacing: 1px;">Starting Point</p>
+        <p class="text-lg text-dark font-bold" style="margin-top: 6px;">Milestone 1.1</p>
+        <p class="text-sm text-medium" style="margin-top: 4px;">Vue + Vite setup, Pyodide integration, basic motor.run()</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">8</div>
+</div>
+
+<!-- Slide 9: Summary -->
+<div class="slide" id="slide9">
+  <div class="accent-bar"></div>
+  <div class="title-zone">
+    <h1>Summary: All Questions & Decisions</h1>
+  </div>
+  <div class="content-zone col gap-sm">
+    <div class="row gap-md" style="padding: 0 8px;">
+      <p class="text-sm text-muted font-bold" style="width: 36px;">#</p>
+      <p class="text-sm text-muted font-bold" style="flex: 2; text-transform: uppercase; letter-spacing: 1px;">Question</p>
+      <p class="text-sm text-muted font-bold" style="flex: 3; text-transform: uppercase; letter-spacing: 1px;">Decision</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">1</p>
+      <p class="summary-q">Primary purpose?</p>
+      <p class="summary-a">Test code before deploying to real robot</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">2</p>
+      <p class="summary-q">Which Spike system?</p>
+      <p class="summary-a">Spike Prime</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">3</p>
+      <p class="summary-q">Fidelity level?</p>
+      <p class="summary-a">Logic → 2D → 3D → Physics (incremental)</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">4</p>
+      <p class="summary-q">Programming environment?</p>
+      <p class="summary-a">Python (exact API compatibility)</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">5</p>
+      <p class="summary-q">Tech stack?</p>
+      <p class="summary-a">Vue.js + Pyodide (web-based)</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">6</p>
+      <p class="summary-q">Intended use?</p>
+      <p class="summary-a">Personal use, public GitHub repository</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">7-9</p>
+      <p class="summary-q">Components / API / Time?</p>
+      <p class="summary-a">Motors + IMU first • Exact API • Real-time</p>
+    </div>
+    <div class="summary-row">
+      <p class="summary-num">10-13</p>
+      <p class="summary-q">State / Config / Build?</p>
+      <p class="summary-a">Console + Dashboard • JSON config • Incremental</p>
+    </div>
+    <div class="card gradient" style="margin-top: 8px;">
+      <p class="text-md text-white"><span style="opacity: 0.8;">OUTCOME:</span> <span class="font-bold">13 clarifying questions → Clear project plan → Ready to build Milestone 1.1</span></p>
+    </div>
+  </div>
+  <div class="slide-number">9</div>
+</div>
+
+<!-- Navigation Controls -->
+<div class="nav-controls">
+  <button onclick="prevSlide()">← Previous</button>
+  <span id="slideCounter">1 / 9</span>
+  <button onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 9;
+
+  function showSlide(n) {
+    if (n > totalSlides) currentSlide = 1;
+    else if (n < 1) currentSlide = totalSlides;
+    else currentSlide = n;
+
+    document.querySelectorAll('.slide').forEach(slide => {
+      slide.classList.remove('active');
+    });
+
+    document.getElementById('slide' + currentSlide).classList.add('active');
+    document.getElementById('slideCounter').textContent = currentSlide + ' / ' + totalSlides;
+  }
+
+  function nextSlide() {
+    showSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    showSlide(currentSlide - 1);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      prevSlide();
+    }
+  });
+</script>
+
+</body>
+</html>
