@@ -8,12 +8,12 @@ to learn more.
 Learn more about IDE Support for Vue in the
 [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
-## Starting the server
+# Starting the server
 
 1. Install node.js from https://nodejs.org/en/download if node.js does not exist on the machine.
 2. Open Window Power Shell.
 3. Run the following commands
-```bash
+```
 cd C:\Users\nafis\github_repos\lego_spike_robot_simulator
 npm install
 npm dev run
