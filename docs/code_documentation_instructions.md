@@ -16,3 +16,4 @@ Generate a PlantUML class diagram showing main components of the web app.
 Describe the life-cycle of various objects created by the app while it is running. Use a PlanetUML sequence diagram to visually depict the life-cycles.
 
 # Event handling logic
+Describe how the app handles various events. Create PlantUML sequence diagrams as needed.
