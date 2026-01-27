@@ -1,6 +1,3 @@
-Here is the updated `code_description.md` file. All PlantUML diagrams have been converted to **Mermaid** syntax, which allows them to be rendered natively by GitHub.
-
-```markdown
 # LEGO Spike Prime Simulator - Code Documentation
 
 ## Overview
@@ -377,5 +374,4 @@ DOM updated
     │
     ▼
 watch() callbacks triggered (auto-scroll)
-```
 ```
