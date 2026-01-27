@@ -1,3 +1,6 @@
+Here is the updated `code_description.md` file. All PlantUML diagrams have been converted to **Mermaid** syntax, which allows them to be rendered natively by GitHub.
+
+```markdown
 # LEGO Spike Prime Simulator - Code Documentation
 
 ## Overview
@@ -7,7 +10,7 @@ This is a web-based simulator for testing Python code before deploying it to rea
 ## Source Files
 
 | File | Purpose |
-|------|---------|
+| :--- | :--- |
 | `src/main.js` | Vue application entry point |
 | `src/App.vue` | Root component, orchestrates the application |
 | `src/components/CodeInput.vue` | Python code editor with Run button |
@@ -17,158 +20,115 @@ This is a web-based simulator for testing Python code before deploying it to rea
 
 ---
 
-# Input and Output
+## Input and Output
 
-## Input
+### Input
 
-### Command-line Flags
+#### Command-line Flags
 This is a client-side web application with no command-line interface. Development commands are:
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+* `npm run dev` - Start development server
+* `npm run build` - Build for production
+* `npm run preview` - Preview production build
 
-### Configuration
+#### Configuration
 | Source | Configuration |
-|--------|---------------|
+| :--- | :--- |
 | `vite.config.js` | Vite build configuration with Vue plugin |
 | `package.json` | Dependencies (Vue 3, Pyodide, Vite) |
-| `usePyodide.js:45` | Pyodide CDN URL: `https://cdn.jsdelivr.net/pyodide/v0.27.0/full/` |
+| `usePyodide.js:45` | Pyodide CDN URL |
 
-### Data Received from External Services
-| Service | Data | Purpose |
-|---------|------|---------|
-| Pyodide CDN (jsdelivr.net) | WebAssembly Python runtime | Enables Python execution in browser |
+### Output
 
-### User Input
-| Component | Input Type | Description |
-|-----------|------------|-------------|
-| `CodeInput.vue` | Text (textarea) | Python code entered by user |
-| `CodeInput.vue` | Click (button) | "Run Code" button triggers execution |
-| `Console.vue` | Click (button) | "Clear" button clears log output |
-
-## Output
-
-### Data Displayed on Screen
+#### Data Displayed on Screen
 | Component | Output | Description |
-|-----------|--------|-------------|
+| :--- | :--- | :--- |
 | `App.vue` header | Status badge | "Loading Pyodide...", "Ready", or "Error" |
 | `Console.vue` | Log entries | Timestamped messages from code execution |
 
-### Log Entry Format
-```
-[HH:MM:SS] <message>
-```
-
-### Types of Log Messages
-- `Pyodide initialized successfully` - Initialization complete
-- `--- Running code ---` - Code execution started
-- `Motor <port> running at <velocity> deg/sec` - Motor started
-- `Motor <port> stopped` - Motor stopped
-- `--- Code execution complete ---` - Code finished
-- `Error: <message>` - Execution error
-
-### Data Sent to External Services
-None. This application is fully client-side and does not send data to any external services.
-
 ---
 
-# Architecture
+## Architecture
 
-## PlantUML Class Diagram
+### Class Diagram
 
-```plantuml
-@startuml
-skinparam classAttributeIconSize 0
+```mermaid
+classDiagram
+    class App {
+        -RobotState state
+        -Ref isLoading
+        -Ref isReady
+        +handleRunCode(code string)
+        +handleClearConsole()
+    }
 
-package "Vue Components" {
-  class App {
-    -state: RobotState
-    -isLoading: Ref<boolean>
-    -isReady: Ref<boolean>
-    +handleRunCode(code: string): void
-    +handleClearConsole(): void
-  }
+    class CodeInput {
+        -Ref code
+        -boolean disabled
+        +emit(run, code)
+    }
 
-  class CodeInput {
-    -code: Ref<string>
-    -disabled: boolean
-    +emit('run', code): void
-  }
+    class Console {
+        -Array logs
+        -Ref consoleRef
+        +emit(clear)
+    }
 
-  class Console {
-    -logs: Array<LogEntry>
-    -consoleRef: Ref<HTMLElement>
-    +emit('clear'): void
-  }
-}
+    class useRobotState {
+        -reactive state
+        +Object PORTS
+        +motorRun(port, velocity)
+        +motorStop(port)
+        +motorVelocity(port)
+        +addLog(message)
+        +clearLogs()
+        +resetState()
+    }
 
-package "Composables" {
-  class useRobotState {
-    -state: reactive
-    +PORTS: Object
-    +motorRun(port, velocity): void
-    +motorStop(port): void
-    +motorVelocity(port): number
-    +addLog(message): void
-    +clearLogs(): void
-    +resetState(): void
-  }
+    class usePyodide {
+        -ShallowRef pyodide
+        -Ref isLoading
+        -Ref isReady
+        -Ref error
+        +initPyodide()
+        +runCode(code)
+    }
 
-  class usePyodide {
-    -pyodide: ShallowRef
-    -isLoading: Ref<boolean>
-    -isReady: Ref<boolean>
-    -error: Ref<string>
-    +initPyodide(): Promise<void>
-    +runCode(code): Promise<void>
-  }
-}
+    class RobotState {
+        +Object motors
+        +Array logs
+    }
 
-package "State" {
-  class RobotState {
-    +motors: Object
-    +logs: Array<LogEntry>
-  }
+    class MotorState {
+        +number velocity
+        +number absolutePosition
+        +number relativePosition
+        +boolean running
+    }
 
-  class MotorState {
-    +velocity: number
-    +absolutePosition: number
-    +relativePosition: number
-    +running: boolean
-  }
+    class LogEntry {
+        +string timestamp
+        +string message
+    }
 
-  class LogEntry {
-    +timestamp: string
-    +message: string
-  }
-}
+    class Pyodide {
+        +runPythonAsync(code)
+        +Map globals
+    }
 
-package "External" {
-  class Pyodide {
-    +runPythonAsync(code): Promise
-    +globals: Map
-  }
-}
-
-App --> CodeInput : contains
-App --> Console : contains
-App --> useRobotState : uses
-App --> usePyodide : uses
-
-useRobotState --> RobotState : manages
-RobotState --> MotorState : contains 6
-RobotState --> LogEntry : contains many
-
-usePyodide --> Pyodide : wraps
-usePyodide --> useRobotState : calls motor functions
-
-CodeInput ..> App : emits 'run'
-Console ..> App : emits 'clear'
-
-@enduml
+    App *-- CodeInput : contains
+    App *-- Console : contains
+    App ..> useRobotState : uses
+    App ..> usePyodide : uses
+    useRobotState o-- RobotState : manages
+    RobotState *-- MotorState : contains 6
+    RobotState *-- LogEntry : contains many
+    usePyodide ..> Pyodide : wraps
+    usePyodide ..> useRobotState : calls motor functions
+    CodeInput ..> App : emits 'run'
+    Console ..> App : emits 'clear'
 ```
 
-## Component Relationships
+### Component Relationships
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -193,11 +153,11 @@ Console ..> App : emits 'clear'
 
 ---
 
-# Lifecycle of Objects
+## Lifecycle of Objects
 
-## Application Lifecycle
+### Application Lifecycle
 
-### Phase 1: Initialization
+#### Phase 1: Initialization
 1. Browser loads `index.html`
 2. Vite serves `src/main.js`
 3. Vue creates app instance and mounts `App.vue`
@@ -206,223 +166,196 @@ Console ..> App : emits 'clear'
 6. Python modules (`hub.port`, `motor`) are created
 7. Status changes from "Loading..." to "Ready"
 
-### Phase 2: User Interaction
+#### Phase 2: User Interaction
 1. User enters Python code in textarea
 2. User clicks "Run Code"
 3. Code executes via Pyodide
 4. Motor functions update robot state
 5. Logs appear in Console
 
-### Phase 3: Cleanup
-1. User clicks "Clear" to reset logs
-2. User can run new code
+### Initialization Sequence
 
-## PlantUML Sequence Diagram - Initialization
+```mermaid
+sequenceDiagram
+    title Application Initialization Sequence
+    participant Browser
+    participant Main as main.js
+    participant App as App.vue
+    participant State as useRobotState
+    participant Pyodide as usePyodide
+    participant CDN
 
-```plantuml
-@startuml
-title Application Initialization Sequence
+    Browser->>Main: Load application
+    Main->>App: createApp().mount()
+    activate App
 
-participant Browser
-participant "main.js" as Main
-participant "App.vue" as App
-participant "usePyodide" as Pyodide
-participant "useRobotState" as State
-participant "CDN" as CDN
+    App->>State: useRobotState()
+    State-->>App: { state, clearLogs, ... }
 
-Browser -> Main: Load application
-Main -> App: createApp().mount()
-activate App
+    App->>Pyodide: usePyodide()
+    Pyodide-->>App: { isLoading, initPyodide, ... }
 
-App -> State: useRobotState()
-State --> App: { state, clearLogs, ... }
+    App->>App: onMounted()
+    App->>Pyodide: initPyodide()
+    activate Pyodide
 
-App -> Pyodide: usePyodide()
-Pyodide --> App: { isLoading, initPyodide, ... }
+    Pyodide->>Pyodide: isLoading = true
+    Pyodide->>CDN: loadPyodide(indexURL)
+    CDN-->>Pyodide: Pyodide runtime (WASM)
 
-App -> App: onMounted()
-App -> Pyodide: initPyodide()
-activate Pyodide
+    Pyodide->>Pyodide: Expose JS functions to Python (motorRun, etc.)
+    Pyodide->>Pyodide: Create hub.port module
+    Pyodide->>Pyodide: Create motor module
+    Pyodide->>Pyodide: Override sys.stdout/stderr
 
-Pyodide -> Pyodide: isLoading = true
-Pyodide -> CDN: loadPyodide(indexURL)
-CDN --> Pyodide: Pyodide runtime (WASM)
+    Pyodide->>State: addLog("Pyodide initialized")
+    Pyodide->>Pyodide: isReady = true
+    Pyodide->>Pyodide: isLoading = false
+    deactivate Pyodide
 
-Pyodide -> Pyodide: Expose JS functions to Python\n(motorRun, motorStop, etc.)
-Pyodide -> Pyodide: Create hub.port module
-Pyodide -> Pyodide: Create motor module
-Pyodide -> Pyodide: Override sys.stdout/stderr
-
-Pyodide -> State: addLog("Pyodide initialized")
-Pyodide -> Pyodide: isReady = true
-Pyodide -> Pyodide: isLoading = false
-deactivate Pyodide
-
-App -> App: UI updates to "Ready"
-deactivate App
-
-@enduml
+    App->>App: UI updates to "Ready"
+    deactivate App
 ```
 
-## PlantUML Sequence Diagram - Code Execution
+### Code Execution Lifecycle
 
-```plantuml
-@startuml
-title Code Execution Lifecycle
+```mermaid
+sequenceDiagram
+    title Code Execution Lifecycle
+    actor User
+    participant CodeInput as CodeInput.vue
+    participant App as App.vue
+    participant Pyodide as usePyodide
+    participant Runtime as Pyodide Runtime
+    participant Motor as Python motor module
+    participant State as useRobotState
+    participant Console as Console.vue
 
-actor User
-participant "CodeInput.vue" as CodeInput
-participant "App.vue" as App
-participant "usePyodide" as Pyodide
-participant "Pyodide Runtime" as Runtime
-participant "Python motor module" as Motor
-participant "useRobotState" as State
-participant "Console.vue" as Console
+    User->>CodeInput: Enter Python code
+    User->>CodeInput: Click "Run Code"
+    CodeInput->>App: emit('run', code)
 
-User -> CodeInput: Enter Python code
-User -> CodeInput: Click "Run Code"
-CodeInput -> App: emit('run', code)
+    App->>Pyodide: runCode(code)
+    activate Pyodide
 
-App -> Pyodide: runCode(code)
-activate Pyodide
+    Pyodide->>State: addLog("--- Running code ---")
+    State->>Console: logs updated (reactive)
+    Console->>Console: Auto-scroll
 
-Pyodide -> State: addLog("--- Running code ---")
-State -> Console: logs updated (reactive)
-Console -> Console: Auto-scroll
+    Pyodide->>Runtime: runPythonAsync(code)
+    activate Runtime
 
-Pyodide -> Runtime: runPythonAsync(code)
-activate Runtime
+    Runtime->>Motor: motor.run(port.A, 1000)
+    Motor->>State: _motor_run(0, 1000)
+    State->>State: motors[0].velocity = 1000
+    State->>State: motors[0].running = true
+    State->>State: addLog("Motor A running...")
+    State->>Console: logs updated (reactive)
+    Console->>Console: Auto-scroll
 
-Runtime -> Motor: motor.run(port.A, 1000)
-Motor -> State: _motor_run(0, 1000)
-State -> State: motors[0].velocity = 1000
-State -> State: motors[0].running = true
-State -> State: addLog("Motor A running...")
-State -> Console: logs updated (reactive)
-Console -> Console: Auto-scroll
+    Runtime-->>Pyodide: execution complete
+    deactivate Runtime
 
-Runtime --> Pyodide: execution complete
-deactivate Runtime
-
-Pyodide -> State: addLog("--- Code execution complete ---")
-State -> Console: logs updated (reactive)
-deactivate Pyodide
-
-@enduml
+    Pyodide->>State: addLog("--- Code execution complete ---")
+    State->>Console: logs updated (reactive)
+    deactivate Pyodide
 ```
 
 ---
 
-# Event Handling Logic
+## Event Handling Logic
 
-## Events Overview
+### Events Overview
 
 | Event | Source | Handler | Action |
-|-------|--------|---------|--------|
+| :--- | :--- | :--- | :--- |
 | Component mounted | Vue lifecycle | `App.onMounted()` | Initialize Pyodide |
 | Run button click | `CodeInput.vue` | `App.handleRunCode()` | Execute Python code |
 | Clear button click | `Console.vue` | `App.handleClearConsole()` | Clear log entries |
 | Logs array change | `useRobotState` | `Console.watch()` | Auto-scroll to bottom |
-| Code textarea input | User | `v-model` binding | Update `code` ref |
 
-## Event Flow Diagrams
+### Event Flow Diagrams
 
-### Run Code Event
+#### Run Code Event
 
-```plantuml
-@startuml
-title Run Code Event Flow
-
-start
-:User clicks "Run Code" button;
-:CodeInput.handleRun() called;
-:emit('run', code.value);
-:App receives @run event;
-:App.handleRunCode(code) called;
-:usePyodide.runCode(code) called;
-
-if (pyodide ready?) then (yes)
-  :addLog("--- Running code ---");
-  :pyodide.runPythonAsync(code);
-
-  if (execution successful?) then (yes)
-    :addLog("--- Code execution complete ---");
-  else (no)
-    :addLog("Error: " + message);
-  endif
-else (no)
-  :addLog("Pyodide is not ready yet");
-endif
-
-stop
-@enduml
+```mermaid
+flowchart TD
+    title Run Code Event Flow
+    Start([Start]) --> UserClick[User clicks "Run Code" button]
+    UserClick --> HandleRun[CodeInput.handleRun called]
+    HandleRun --> Emit[emit 'run', code.value]
+    Emit --> AppReceive[App receives @run event]
+    AppReceive --> AppHandle[App.handleRunCode code called]
+    AppHandle --> RunCode[usePyodide.runCode code called]
+    
+    RunCode --> Ready{pyodide ready?}
+    Ready -- Yes --> AddLog[addLog '--- Running code ---']
+    AddLog --> Exec[pyodide.runPythonAsync code]
+    
+    Exec --> Success{execution successful?}
+    Success -- Yes --> CompleteLog[addLog '--- Code execution complete ---']
+    Success -- No --> ErrorLog[addLog 'Error: ' + message]
+    
+    Ready -- No --> NotReadyLog[addLog 'Pyodide is not ready yet']
+    
+    CompleteLog --> Stop([Stop])
+    ErrorLog --> Stop
+    NotReadyLog --> Stop
 ```
 
-### Clear Console Event
+#### Clear Console Event
 
-```plantuml
-@startuml
-title Clear Console Event Flow
-
-start
-:User clicks "Clear" button;
-:Console.handleClear() called;
-:emit('clear');
-:App receives @clear event;
-:App.handleClearConsole() called;
-:useRobotState.clearLogs() called;
-:state.logs.splice(0, length);
-:Console reactively updates;
-:Placeholder message shown;
-stop
-@enduml
+```mermaid
+flowchart TD
+    title Clear Console Event Flow
+    Start([Start]) --> Click[User clicks "Clear" button]
+    Click --> HandleClear[Console.handleClear called]
+    HandleClear --> Emit[emit 'clear']
+    Emit --> AppReceive[App receives @clear event]
+    AppReceive --> AppHandle[App.handleClearConsole called]
+    AppHandle --> ClearLogs[useRobotState.clearLogs called]
+    ClearLogs --> Splice[state.logs.splice 0, length]
+    Splice --> Reactive[Console reactively updates]
+    Reactive --> Placeholder[Placeholder message shown]
+    Placeholder --> Stop([Stop])
 ```
 
-### Auto-Scroll Event
+#### Auto-Scroll Event
 
-```plantuml
-@startuml
-title Console Auto-Scroll Event Flow
-
-start
-:Log entry added to state.logs;
-:Vue reactivity triggers watch();
-:watch() detects logs.length change;
-:await nextTick();
-note right: Wait for DOM update
-:Get consoleRef.value;
-:Set scrollTop = scrollHeight;
-:Console scrolls to bottom;
-stop
-@enduml
+```mermaid
+flowchart TD
+    title Console Auto-Scroll Event Flow
+    Start([Start]) --> LogAdded[Log entry added to state.logs]
+    LogAdded --> Reactivity[Vue reactivity triggers watch]
+    Reactivity --> Watch[watch detects logs.length change]
+    Watch --> NextTick[await nextTick]
+    NextTick --> DOMUpdate[Wait for DOM update]
+    DOMUpdate --> GetRef[Get consoleRef.value]
+    GetRef --> Scroll[Set scrollTop = scrollHeight]
+    Scroll --> End([Console scrolls to bottom])
 ```
 
-## Python-to-JavaScript Bridge Events
+### Python-to-JavaScript Bridge Events
 
-When Python code calls motor functions, the following bridge occurs:
+```mermaid
+sequenceDiagram
+    title Python-JavaScript Bridge
+    participant Python as Python Code
+    participant MotorPy as motor module (Python)
+    participant Bridge as Pyodide Bridge
+    participant MotorJS as _motor_run (JavaScript)
+    participant State as useRobotState
 
-```plantuml
-@startuml
-title Python-JavaScript Bridge
-
-participant "Python Code" as Python
-participant "motor module\n(Python)" as MotorPy
-participant "Pyodide Bridge" as Bridge
-participant "_motor_run\n(JavaScript)" as MotorJS
-participant "useRobotState" as State
-
-Python -> MotorPy: motor.run(port.A, 1000)
-MotorPy -> Bridge: _motor_run(0, 1000)
-note over Bridge: JavaScript function\nexposed via globals.set()
-Bridge -> MotorJS: motorRun(0, 1000)
-MotorJS -> State: state.motors[0].velocity = 1000
-MotorJS -> State: state.motors[0].running = true
-MotorJS -> State: addLog("Motor A running at 1000 deg/sec")
-
-@enduml
+    Python->>MotorPy: motor.run(port.A, 1000)
+    MotorPy->>Bridge: _motor_run(0, 1000)
+    Note over Bridge: JavaScript function exposed via globals.set()
+    Bridge->>MotorJS: motorRun(0, 1000)
+    MotorJS->>State: state.motors[0].velocity = 1000
+    MotorJS->>State: state.motors[0].running = true
+    MotorJS->>State: addLog("Motor A running at 1000 deg/sec")
 ```
 
-## Vue Reactivity Flow
+### Vue Reactivity Flow
 
 ```
 User Action
@@ -444,4 +377,5 @@ DOM updated
     │
     ▼
 watch() callbacks triggered (auto-scroll)
+```
 ```
